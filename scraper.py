@@ -8,7 +8,7 @@ import scraperwiki
 import urllib2
 from datetime import datetime
 from bs4 import BeautifulSoup
-import requests
+
 
 #### FUNCTIONS 1.0
 
@@ -84,7 +84,7 @@ def convert_mth_strings ( mth_string ):
 
 #### VARIABLES 1.0
 
-entity_id = "historic_eng_land"
+entity_id = "DCM048_THBAM_gov"
 url = "http://historicengland.org.uk/about/what-we-do/how-we-spend-our-money/transparency-data/expenditure-over-25000/"
 errors = 0
 data = []
@@ -97,6 +97,21 @@ soup = BeautifulSoup(html, "lxml")
 
 #### SCRAPE DATA
 
+archived_link = soup.find('li', 'menu-item-open').find_all('a')[-1]['href']
+archived_page = urllib2.urlopen('http://historicengland.org.uk'+archived_link)
+archived_soup = BeautifulSoup(archived_page, "lxml")
+archived_urls = archived_soup.find_all('li', 'csv')
+for archived_url in archived_urls:
+    file_link = archived_url.find('a')['href']
+    file_name = archived_url.find('a').text.strip()
+    if ' to ' in file_name:
+        csvMth = 'Q0'
+        csvYr = file_name[-4:]
+    else:
+        csvMth = file_name.split(' ')[-2][:3]
+        csvYr = file_name[-4:]
+    csvMth = convert_mth_strings(csvMth.upper())
+    data.append([csvYr, csvMth, file_link])
 blocks = soup.find('div', 'featureBlock relatedDocs inPage').find('ul')
 title_divs = blocks.find_all('a')
 for title_div in title_divs:
